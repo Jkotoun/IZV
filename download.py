@@ -118,6 +118,8 @@ class DataDownloader:
     def get_dict(self, regions=None):
 
         regions_dict = {}
+        if regions == None or regions == []:
+            regions = self.regions.keys()
         for region in regions:
             # check if region is in instance attr
             if self.regions_dicts_cache[region] == None:
@@ -146,6 +148,3 @@ if __name__ == "__main__":
     print("Kraje: Vysočina, Karlovarský, Jihomoravský")
     print("Počet záznamů: " + str(len(c["p1"])))
     print("Sloupce: " + ', '.join(downloader.headers))
-    
-    # downloader.parse_region_data("PHA")
-# TODO vypsat zakladni informace pri spusteni python3 download.py (ne pri importu modulu)
