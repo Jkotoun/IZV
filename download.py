@@ -75,13 +75,12 @@ class DataDownloader:
 
     def get_folder_zip_files(self):
         folder_files = os.listdir("./"+self.folder)
-        zip_files =  list(filter(lambda file: re.match(".*\.zip", file),folder_files))
+        zip_files = list(filter(lambda file: re.match(".*\.zip", file), folder_files))
         return zip_files
 
     def parse_region_data(self, region):
         if region not in self.regions.keys():
-            raise ValueError("Specified region does not exist")
-       
+            raise ValueError("Specified region does not exist") 
         zip_files = self.get_folder_zip_files()
         if(len(zip_files) != 6):
             self.download_data()
@@ -104,7 +103,7 @@ class DataDownloader:
                         region_dict["region"].append(region)
         for key in region_dict:
             try:
-              region_dict[key] = np.array(region_dict[key], dtype=int)
+                region_dict[key] = np.array(region_dict[key], dtype=int)
             except:
                 try:
                     region_dict[key] = np.array(region_dict[key], dtype=float)
@@ -118,20 +117,20 @@ class DataDownloader:
     def get_dict(self, regions=None):
 
         regions_dict = {}
-        if regions == None or regions == []:
+        if regions is None or regions == []:
             regions = self.regions.keys()
         for region in regions:
             # check if region is in instance attr
-            if self.regions_dicts_cache[region] == None:
+            if self.regions_dicts_cache[region] is None:
                 # check if cache file exists
                 region_cache_file_name = f"./{self.folder}/{self.cache_filename.replace('{}', region)}"
-                if os.path.exists(region_cache_file_name ):
-                    with gzip.open(region_cache_file_name , "rb") as pickle_cache:
+                if os.path.exists(region_cache_file_name):
+                    with gzip.open(region_cache_file_name, "rb") as pickle_cache:
                         self.regions_dicts_cache[region] = pickle.load(pickle_cache)
                 else:
-                    region_data =  self.parse_region_data(region)
-                    with gzip.open(region_cache_file_name , 'wb') as f:
-                        pickle.dump(region_data,f)
+                    region_data = self.parse_region_data(region)
+                    with gzip.open(region_cache_file_name, 'wb') as f:
+                        pickle.dump(region_data, f)
                     self.regions_dicts_cache[region] = region_data
             #result dict is empty
             if not regions_dict:

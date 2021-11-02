@@ -13,7 +13,6 @@ from download import DataDownloader
 
 
 def plot_stat(data_source, fig_location=None, show_figure=False):
-    import numpy as np
 
     right_of_way_accident = ["Přerušovaná žlutá",  "Semafor mimo provoz",
                              "Dopravní značky",   "Přenosné dopravní značky",  "Nevyznačena", "Žádná úprava"]
@@ -89,7 +88,7 @@ def plot_stat(data_source, fig_location=None, show_figure=False):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--fig_location', dest="fig_location", default = None, help='Relative location to store figure')
+    parser.add_argument('--fig_location', dest="fig_location", default=None, help='Relative location to store figure')
     parser.add_argument('--show_figure', dest='show_figure', action="store_true", help='sum the integers (default: find the max)')
     args = parser.parse_args()
     data_source = DataDownloader().get_dict()
