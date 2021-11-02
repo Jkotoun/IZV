@@ -13,7 +13,11 @@ from download import DataDownloader
 
 
 def plot_stat(data_source, fig_location=None, show_figure=False):
-
+    """Visualises data from data source
+    'data_source' - dictionary, where keys are headers of csv columns and data are np arrays
+    'fig_location' - location, where to save figure. Default is none - no figure is saved
+    'show_figure' - if true, the figure is shown
+    """
     right_of_way_accident = ["Přerušovaná žlutá",  "Semafor mimo provoz",
                              "Dopravní značky",   "Přenosné dopravní značky",  "Nevyznačena", "Žádná úprava"]
     regions = ["HKK",

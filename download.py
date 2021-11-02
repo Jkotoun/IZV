@@ -49,12 +49,17 @@ class DataDownloader:
     }
 
     def __init__(self, url="https://ehw.fit.vutbr.cz/izv/", folder="data", cache_filename="data_{}.pkl.gz"):
+        """Init
+        'url' - url from where zip files should be downloaded
+        'folder' - folder relative path to store zip files
+        'cache_filename' - name of cache file names for region cache files. Should contain {}, so it can be replaced with name of region"""
         self.folder = folder
         self.url = url
         self.cache_filename = cache_filename
         self.regions_dicts_cache = dict.fromkeys(self.regions)
-
+    
     def download_data(self):
+        """Downloads zip files from end of each year from url given by url property"""
         if not os.path.exists(f"./{self.folder}"):
             os.makedirs(self.folder)
         resp = requests.get(self.url)
@@ -74,11 +79,13 @@ class DataDownloader:
                         fd.write(chunk)
 
     def get_folder_zip_files(self):
+        """Returns list of zip files in folder property"""
         folder_files = os.listdir("./"+self.folder)
         zip_files = list(filter(lambda file: re.match(".*\.zip", file), folder_files))
         return zip_files
 
     def parse_region_data(self, region):
+        """Returns dict for specified region with column names as keys and numpy array of col values as value"""
         if region not in self.regions.keys():
             raise ValueError("Specified region does not exist") 
         zip_files = self.get_folder_zip_files()
@@ -115,7 +122,7 @@ class DataDownloader:
         return region_dict
 
     def get_dict(self, regions=None):
-
+        """Returns merged dict for all specified regions"""
         regions_dict = {}
         if regions is None or regions == []:
             regions = self.regions.keys()
