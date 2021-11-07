@@ -49,19 +49,18 @@ class DataDownloader:
     }
 
     def __init__(self, url="https://ehw.fit.vutbr.cz/izv/", folder="data", cache_filename="data_{}.pkl.gz"):
-        """Init
+        """Init creates folder if it does not exist
         'url' - url from where zip files should be downloaded
         'folder' - folder relative path to store zip files
         'cache_filename' - name of cache file names for region cache files. Should contain {}, so it can be replaced with name of region"""
         self.folder = folder
         self.url = url
         self.cache_filename = cache_filename
+        os.makedirs(self.folder, exist_ok=True)
         self.regions_dicts_cache = dict.fromkeys(self.regions)
     
     def download_data(self):
         """Downloads zip files from end of each year from url given by url property"""
-        if not os.path.exists(f"./{self.folder}"):
-            os.makedirs(self.folder)
         resp = requests.get(self.url)
         zip_files = []
         soup = BeautifulSoup(resp.text, 'html.parser')
@@ -108,17 +107,20 @@ class DataDownloader:
                         for key in csvline:
                             region_dict[key].append(csvline[key])
                         region_dict["region"].append(region)
+        #try parse to int, if cant parse to int, parse to str (data contains strings and ints)
         for key in region_dict:
-            try:
-                region_dict[key] = np.array(region_dict[key], dtype=int)
-            except:
+            if(key == "p2a"):
+                region_dict[key] = np.array(region_dict[key], dtype=np.datetime64)
+            else:
                 try:
-                    region_dict[key] = np.array(region_dict[key], dtype=float)
-                except:
-                    if(key != "p2a"):
-                        region_dict[key] = np.array(
-                            region_dict[key], dtype=str)
-            # region_dict["p2a"] = np.array(region_dict["p2a"], dtype=np.datetime64)
+                    region_dict[key] = np.array([value if len(value)>0 else -1 for value in region_dict[key]], dtype=int)
+                except Exception as e:
+                    try:
+                        float(region_dict[key][0].replace(",",".")) #try if first value can be parsed to float
+                        arr = [value.replace(",",".") if len(value)!=0 else float("NaN") for value in region_dict[key]]
+                        region_dict[key] =  np.array(arr, dtype=float)
+                    except Exception as e:
+                        region_dict[key] = np.array(region_dict[key], dtype=str)     
         return region_dict
 
     def get_dict(self, regions=None):
