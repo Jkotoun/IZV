@@ -117,6 +117,7 @@ class DataDownloader:
                                 elif self.col_data_types[col_index == float]:
                                     region_dict[self.headers[col_index]].append(np.nan)
                         region_dict["region"].append(region)
+        #create np array from lists
         for key in region_dict:
             region_dict[key] = np.array(region_dict[key], dtype=type(region_dict[key][0]))
         unique, counts = np.unique(region_dict["p1"], return_counts=1)
