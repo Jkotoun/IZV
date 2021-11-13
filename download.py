@@ -48,6 +48,11 @@ class DataDownloader:
         "KVK": "19",
     }
 
+
+    col_data_types = [int, int, int, np.datetime64, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, 
+    int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, float, 
+    float, float, float, float, float, str, str, int, str, str, str, str, str, str, int, int, str, int, str]
+                  
     def __init__(self, url="https://ehw.fit.vutbr.cz/izv/", folder="data", cache_filename="data_{}.pkl.gz"):
         """Init creates folder if it does not exist
         'url' - url from where zip files should be downloaded
@@ -58,7 +63,7 @@ class DataDownloader:
         self.cache_filename = cache_filename
         os.makedirs(self.folder, exist_ok=True)
         self.regions_dicts_cache = dict.fromkeys(self.regions)
-    
+
     def download_data(self):
         """Downloads zip files from end of each year from url given by url property"""
         resp = requests.get(self.url)
@@ -71,7 +76,7 @@ class DataDownloader:
             zip_files.append(re.search("data/.*\.zip", btntext).group(0))
 
         for zip_file in zip_files:
-            #need only last zip in year - skip others
+            # need only last zip in year - skip others
             with requests.get(self.url+zip_file, stream=True) as r:
                 with open("./"+self.folder+"/"+zip_file.split("/")[-1], "wb") as fd:
                     for chunk in r.iter_content(chunk_size=128, decode_unicode=True):
@@ -86,7 +91,7 @@ class DataDownloader:
     def parse_region_data(self, region):
         """Returns dict for specified region with column names as keys and numpy array of col values as value"""
         if region not in self.regions.keys():
-            raise ValueError("Specified region does not exist") 
+            raise ValueError("Specified region does not exist")
         zip_files = self.get_folder_zip_files()
         if(len(zip_files) != 6):
             self.download_data()
@@ -101,34 +106,25 @@ class DataDownloader:
             with zipfile.ZipFile(f"./{self.folder}/{file}", 'r') as zip_file:
                 # open region csv file
                 with zip_file.open(self.regions[region]+".csv", 'r') as csvfile:
-                    csvreader = csv.DictReader(io.TextIOWrapper(
-                        csvfile, "cp1250"), self.headers, delimiter=';')
+                    csvreader = csv.reader(io.TextIOWrapper(csvfile, "cp1250"), delimiter=';')
                     for csvline in csvreader:
-                        for key in csvline:
-                            region_dict[key].append(csvline[key])
+                        for col_index in range(len(csvline)):
+                            try:
+                                region_dict[self.headers[col_index]].append(self.col_data_types[col_index ](csvline[col_index]))
+                            except ValueError:
+                                if self.col_data_types[col_index] == int:
+                                    region_dict[self.headers[col_index]].append(-1)
+                                elif self.col_data_types[col_index == float]:
+                                    region_dict[self.headers[col_index]].append(np.nan)
                         region_dict["region"].append(region)
-        #try parse to int, if cant parse to int, parse to str (data contains strings and ints)
         for key in region_dict:
-            if(key == "p2a"):
-                region_dict[key] = np.array(region_dict[key], dtype=np.datetime64)
-            else:
-                try:
-                    region_dict[key] = np.array([value if len(value)>0 else -1 for value in region_dict[key]], dtype=int)
-                except Exception as e:
-                    try:
-                        float(region_dict[key][0].replace(",",".")) #try if first value can be parsed to float
-                        arr = [value.replace(",",".") if len(value)!=0 else float("NaN") for value in region_dict[key]]
-                        region_dict[key] =  np.array(arr, dtype=float)
-                    except Exception as e:
-                        #str if cant be parsed to int or float
-                        region_dict[key] = np.array(region_dict[key], dtype=str)     
-        
+            region_dict[key] = np.array(region_dict[key], dtype=type(region_dict[key][0]))
         unique, counts = np.unique(region_dict["p1"], return_counts=1)
-        #remove duplicit data
+        # remove duplicit data
         if np.count_nonzero(counts > 1):
-            indices = np.argwhere(counts>1)
+            indices = np.argwhere(counts > 1)
             for key in region_dict:
-                region_dict[key] = np.delete(region_dict[key],indices )
+                region_dict[key] = np.delete(region_dict[key], indices )
         return region_dict
 
     def get_dict(self, regions=None):
@@ -149,7 +145,7 @@ class DataDownloader:
                     with gzip.open(region_cache_file_name, 'wb') as f:
                         pickle.dump(region_data, f)
                     self.regions_dicts_cache[region] = region_data
-            #result dict is empty
+            # result dict is empty
             if not regions_dict:
                 regions_dict = dict(self.regions_dicts_cache[region])
             else:
