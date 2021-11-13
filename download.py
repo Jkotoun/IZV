@@ -98,9 +98,9 @@ class DataDownloader:
         region_dict["region"] = []
         for file in zip_files:
             # open zip archive
-            with zipfile.ZipFile(f"./{self.folder}/{file}", 'r') as zip:
+            with zipfile.ZipFile(f"./{self.folder}/{file}", 'r') as zip_file:
                 # open region csv file
-                with zip.open(self.regions[region]+".csv", 'r') as csvfile:
+                with zip_file.open(self.regions[region]+".csv", 'r') as csvfile:
                     csvreader = csv.DictReader(io.TextIOWrapper(
                         csvfile, "cp1250"), self.headers, delimiter=';')
                     for csvline in csvreader:
@@ -120,7 +120,15 @@ class DataDownloader:
                         arr = [value.replace(",",".") if len(value)!=0 else float("NaN") for value in region_dict[key]]
                         region_dict[key] =  np.array(arr, dtype=float)
                     except Exception as e:
+                        #str if cant be parsed to int or float
                         region_dict[key] = np.array(region_dict[key], dtype=str)     
+        
+        unique, counts = np.unique(region_dict["p1"], return_counts=1)
+        #remove duplicit data
+        if np.count_nonzero(counts > 1):
+            indices = np.argwhere(counts>1)
+            for key in region_dict:
+                region_dict[key] = np.delete(region_dict[key],indices )
         return region_dict
 
     def get_dict(self, regions=None):
