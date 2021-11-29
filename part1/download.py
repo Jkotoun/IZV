@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from enum import IntEnum
 import numpy as np
 import io
 import zipfile
@@ -49,9 +48,9 @@ class DataDownloader:
     }
 
 
-    col_data_types = [int, int, int, np.datetime64, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, 
-    int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, float, 
-    float, float, float, float, float, str, str, int, str, str, str, str, str, str, int, int, str, int, str]
+    col_data_types = [np.int64, np.int64, np.int64, np.datetime64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, 
+    np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, np.int64, float, 
+    float, float, float, float, float, str, str, np.int64, str, str, str, str, str, str, np.int64, np.int64, str, np.int64, str]
                   
     def __init__(self, url="https://ehw.fit.vutbr.cz/izv/", folder="data", cache_filename="data_{}.pkl.gz"):
         """Init creates folder if it does not exist
@@ -112,10 +111,13 @@ class DataDownloader:
                             try:
                                 region_dict[self.headers[col_index]].append(self.col_data_types[col_index ](csvline[col_index]))
                             except ValueError:
-                                if self.col_data_types[col_index] == int:
-                                    region_dict[self.headers[col_index]].append(-1)
+                                if self.col_data_types[col_index] == np.int64:
+                                     region_dict[self.headers[col_index]].append(-1)
                                 elif self.col_data_types[col_index == float]:
-                                    region_dict[self.headers[col_index]].append(np.nan)
+                                    try:
+                                        region_dict[self.headers[col_index]].append(self.col_data_types[col_index ](csvline[col_index].replace(",",".")))
+                                    except:
+                                        region_dict[self.headers[col_index]].append(np.nan)
                         region_dict["region"].append(region)
         #create np array from lists
         for key in region_dict:
@@ -161,3 +163,4 @@ if __name__ == "__main__":
     print("Kraje: Vysočina, Karlovarský, Jihomoravský")
     print("Počet záznamů: " + str(len(c["p1"])))
     print("Sloupce: " + ', '.join(downloader.headers))
+    print(c["d"])
