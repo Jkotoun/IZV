@@ -45,11 +45,11 @@ def get_dataframe(filename: str, verbose: bool = False) -> pd.DataFrame:
 def plot_roadtype(df: pd.DataFrame, fig_location: str = None,
                   show_figure: bool = False):
     
-    #dataframe only for selected regions and region, p21 cols
+    #dataframe pro 4 vybrane regiony
     p21df = df.loc[df["region"].isin(["KVK", "VYS", "JHM", "ZLK"]),  ["region", "p21"]]
     graph_titles = ["Jiná komunikace", "Dvoupruhová komunikace", "Třípruhová komunikace",
                     "Čtyřpruhová komunikace", "Čtyřpruhová komunikace", "Vícepruhová komunikace", "Rychlostní komunikace"]
-    #create column for facetgrid with merged 4 lane roads
+    #pomocny sloupec pro slouceni 4 pruhovych komunikaci
     p21df["road_type"] = p21df.apply(lambda row: graph_titles[row.p21], axis=1)
 
     sns.set_style("darkgrid")
@@ -72,17 +72,33 @@ def plot_roadtype(df: pd.DataFrame, fig_location: str = None,
         plt.savefig(fig_location)
     if show_figure:
         plt.show()
+    plt.close()
 
 # Ukol3: zavinění zvěří
 
 
 def plot_animals(df: pd.DataFrame, fig_location: str = None,
                  show_figure: bool = False):
-
+    #nehody ze 4 regionu, ktere byly ovlivneny zveri a nejsou v roce 2021
+    filtered_df = df.loc[(df["region"].isin(["KVK", "VYS", "JHM", "ZLK"]))&(df["p58"]==5)&(df["date"].dt.year!=2021),  ["date", "p10", "region"]]
+    #pomocny sloupec pro konvertovani hodnoty zavineni nehody
+    filtered_df["caused_by"] = filtered_df.apply(lambda row: "řidičem" if row.p10 in [1, 2] else ("zvěří" if row.p10 == 4 else "jiné") , axis=1) 
+    grouped_by_month = filtered_df.groupby(by=["region", filtered_df.date.dt.month, "caused_by"]).size().reset_index(name="count")
+    g = sns.catplot(data = grouped_by_month, x="date", y = "count", col="region", hue="caused_by", kind="bar",col_wrap=2, margin_titles=True, sharey=False, sharex=False, height=4)
+    g.set_ylabels("Počet nehod")
+    g.set_xlabels("Kraj")
+    # g.add_legend(title="Zavinění")
+    g._legend.set_title("Zavinění")
+    g.set_titles(col_template = 'Kraj: {col_name}')
+    if fig_location:
+        dir_path = os.path.dirname(fig_location)
+        if(dir_path):
+            os.makedirs(dir_path, exist_ok=True)
+        plt.savefig(fig_location)
+    if show_figure:
+        plt.show()
     
-    pass
-
-
+    plt.close()
 
 
 
@@ -100,6 +116,6 @@ if __name__ == "__main__":
     # funkce.
     # tento soubor si stahnete sami, při testování pro hodnocení bude existovat
     df = get_dataframe("accidents.pkl.gz")
-    plot_roadtype(df, fig_location="sdf/sdff/01_roadtype.png", show_figure=True)
+    # plot_roadtype(df, fig_location="sdf/sdff/01_roadtype.png", show_figure=False)
     plot_animals(df, "02_animals.png", True)
-    plot_conditions(df, "03_conditions.png", True)
+    # plot_conditions(df, "03_conditions.png", True)
