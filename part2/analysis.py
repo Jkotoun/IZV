@@ -60,9 +60,7 @@ def plot_roadtype(df: pd.DataFrame, fig_location: str = None,
     g.map(sns.countplot, "region", order=["KVK", "VYS", "JHM", "ZLK"])
     plt.xticks = []
     
-    g.add_legend(title="Kraje")
-    g.set_xticklabels = []
-    g.set(xticks=[])
+
     g.set_titles(col_template='{col_name}')
     g.set_ylabels("Počet nehod")
     g.set_xlabels("Kraj")
@@ -89,9 +87,7 @@ def plot_animals(df: pd.DataFrame, fig_location: str = None,
                     kind="bar", col_wrap=2, margin_titles=True, sharey=False, sharex=False, height=4)
     g.set_ylabels("Počet nehod")
     g.set_xlabels("Měsíc")
-    # g.add_legend(title="Zavinění")
     g._legend.set_title("Zavinění")
-    g.figure.autofmt_xdate()
     g.set_titles(col_template='Kraj: {col_name}')
     save_and_show(fig_location=fig_location, show_figure=show_figure)
 
@@ -113,15 +109,14 @@ def plot_conditions(df: pd.DataFrame, fig_location: str = None,
     table = pd.pivot_table(filtered_df, columns="p18", aggfunc="size", index=[
                            "region", pd.Grouper(freq='M', key="date")]).stack(level=0).reset_index(name="count")
     sns.set_style("darkgrid")
-    g = sns.relplot(data=table, kind="line", col="region", x="date",
+    g = sns.relplot(data=table.loc[table["date"].dt.year != 2021], kind="line", col="region", x="date",
                     y="count", hue="p18", palette="deep", col_wrap=2, height=4, facet_kws={'sharey': True, 'sharex': False})
     g.set_xlabels("Kraj")
     g.set_ylabels("Počet nehod")
     g._legend.set_title("Podmínky")
-    g.set(xlim=( datetime.date(2016,1,1), datetime.date(2020,1,1)))
+    # g.set(xlim=( datetime.date(2016,1,1), datetime.date(2020,1,1)))
     g.set_titles(col_template='Kraj: {col_name}')
-    g.figure.autofmt_xdate()
-    
+  
     for ax in g.axes.flat:
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%y'))
     save_and_show(fig_location=fig_location, show_figure=show_figure)
