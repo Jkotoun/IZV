@@ -37,23 +37,27 @@ def plot_geo(
     (dalnice vs prvni trida) pro roky 2018-2020"""
 
     gdf = gdf.loc[gdf["region"] == "VYS", ["date", "geometry", "p36"]]
-     #convert to webmap format
+    #convert to webmap format
     gdf.to_crs(epsg=3857, inplace=True)
-
-    fig, ax = plt.subplots(3, 2, figsize=(16,27))
+    #x and y limits
+    minx, miny, maxx, maxy = gdf.geometry.total_bounds
+    fig, ax = plt.subplots(3, 2, figsize=(13,17))
+    #3 rows, 1 for each year
     for index, year in enumerate([2018,2019,2020]):
-        #1st class road and highway - highway = 0 and 1st class road = 1 in dataset
+        #left col for highway and right col for 1st class road
         for j, road in enumerate(
             [
                 {"name": "dálnice", "color": "green", "dataset_num":0}, 
-                {"name": "silnice 1. třídy", "color": "darkred", "dataset_num":1}
+                {"name": "silnice první třídy", "color": "darkred", "dataset_num":1}
             ]
         ):
             gdf[(gdf["p36"] == road["dataset_num"]) & (gdf["date"].dt.year == year)].plot(ax=ax[index, j], color=road["color"], markersize=2)
             ax[index, j].axis("off")
+            ax[index, j].set_xlim(minx, maxx)
+            ax[index, j].set_ylim(miny, maxy)
             ctx.add_basemap(ax=ax[index, j], crs=gdf.crs.to_string(), source=ctx.providers.Stamen.TonerLite)
-            ax[index, j].set_title(f"Kraj Vysočina: {road['name']}  {year}")
-
+            ax[index, j].set_title(f"Kraj Vysočina: {road['name']} {year}")
+    fig.tight_layout(pad=2.0)
     save_and_show(fig_location, show_figure)
     
 
@@ -69,7 +73,12 @@ def plot_cluster(
     #get coords array
     coords_list = np.dstack([filtered_gdf.geometry.x, filtered_gdf.geometry.y])
     coords_list = np.squeeze(coords_list, axis=0)
-    clusters = sklearn.cluster.MiniBatchKMeans(n_clusters=50).fit(coords_list)
+
+    #pro rozdělení do clusterů byla zvolena metoda KMeans, protože se jedná o nejběžněji používanou metodu
+    #Hodnota 25 přehledně zobrazuje úseky s různou úrovní nehodovosti
+    #Byly vyzkoušeny hodnoty v jednotkách clusterů, které nebyly dostatečné pro znázornění a hodnoty kolem 50 - 100, u kterých
+    #úseky s vyšší nehodovostí nejsou tak výrazné
+    clusters = sklearn.cluster.MiniBatchKMeans(n_clusters=25).fit(coords_list)
 
     #dissolve by clusters
     clustered_gdf = filtered_gdf.copy() 
