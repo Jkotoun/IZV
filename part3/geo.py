@@ -71,8 +71,7 @@ def plot_cluster(
     filtered_gdf = gdf.loc[(gdf["p36"]==1) & (gdf["region"] == "VYS")]
     
     #get coords array
-    coords_list = np.dstack([filtered_gdf.geometry.x, filtered_gdf.geometry.y])
-    coords_list = np.squeeze(coords_list, axis=0)
+    coords_list = np.dstack([filtered_gdf.geometry.x, filtered_gdf.geometry.y]).reshape(-1, 2)
 
     #pro rozdělení do clusterů byla zvolena metoda KMeans, protože se jedná o nejběžněji používanou metodu
     #Hodnota 25 přehledně zobrazuje úseky s různou úrovní nehodovosti
